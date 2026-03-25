@@ -6,6 +6,8 @@ export const SubAgentDefSchema = z.object({
   systemPrompt: z.string().optional(),
   tools: z.array(z.any()).optional(),
   model: z.string().optional(),
+  /** Subagent-specific skill paths (overrides main agent's skills) */
+  skills: z.array(z.string()).optional(),
 });
 export type SubAgentDef = z.infer<typeof SubAgentDefSchema>;
 

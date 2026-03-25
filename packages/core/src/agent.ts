@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { Message, StepEvent, SubAgentDef } from '@tdeepagents/schemas';
+import type { Message, StepEvent, SubAgentDef, SkillBundle } from '@tdeepagents/schemas';
 import type { LLMAdapter, ToolDefinition, ToolContext, AgentState, ChatParams } from '@tdeepagents/adapters';
 import { initAdapter } from '@tdeepagents/adapters';
 import type { BackendProtocol } from '@tdeepagents/backends';
@@ -40,6 +40,8 @@ export interface DeepAgentOptions {
   memory?: string[];
   /** Skill directory paths */
   skills?: string[];
+  /** SkillBundle JSON objects for browser/edge scenarios */
+  skillBundles?: SkillBundle[];
   /** Structured output schema (Zod) for the final response */
   responseFormat?: z.ZodType;
   /** Maximum iterations before the agent stops (default: 50) */
@@ -344,8 +346,11 @@ export class DeepAgent {
     }
 
     // Optional: Skills
-    if (this.options.skills?.length) {
-      middlewares.push(new SkillsMiddleware(this.options.skills));
+    if (this.options.skills?.length || this.options.skillBundles?.length) {
+      middlewares.push(new SkillsMiddleware(
+        this.options.skills ?? [],
+        { bundles: this.options.skillBundles },
+      ));
     }
 
     // Optional: HITL
@@ -378,6 +383,8 @@ export class DeepAgent {
         `You are a subagent named "${name}". Complete the assigned task and return a concise final report.`,
       tools: subagentDef?.tools as ToolDefinition[] | undefined,
       backend: this.options.backend, // Share backend for file access
+      skills: subagentDef?.skills ?? this.options.skills, // Inherit main agent skills
+      skillBundles: this.options.skillBundles, // Inherit bundles
       maxIterations: 20, // Subagents have a lower iteration limit
     });
 

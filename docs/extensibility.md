@@ -147,7 +147,6 @@ function webMCPToolToToolDef(tool: ModelContextTool): ToolDefinition {
 
 **方向 B：网页暴露 Agent 工具为 WebMCP**（让外部 Agent/浏览器助手调用我们的工具）
 
-```typescript
 // 将 TDeepAgents 工具注册为 WebMCP 工具
 for (const tool of agent.resolveTools()) {
   navigator.modelContext.registerTool({
@@ -158,3 +157,87 @@ for (const tool of agent.resolveTools()) {
   });
 }
 ```
+
+## Agent Skills
+
+### 规范兼容
+
+完整支持 [Agent Skills Specification](https://agentskills.io/specification)：
+
+| 官方特性 | 支持 | 说明 |
+|---------|------|------|
+| SKILL.md frontmatter (name, description) | ✅ | 核心字段 |
+| license, compatibility, metadata, allowed-tools | ✅ | 扩展字段 |
+| Progressive disclosure (3 层加载) | ✅ | metadata → instructions → resources |
+| Resource 目录 (scripts/, references/, assets/) | ✅ | 自动发现并注入 metadata |
+| 顶层脚本文件 (如 `arxiv_search.ts`) | ✅ | 与 scripts/ 同等发现 |
+| Source precedence (后来者覆盖) | ✅ | 多路径按顺序，同名取最后 |
+| 子 Agent 技能继承 | ✅ | GP subagent 继承，custom subagent 可覆盖 |
+
+### 3 种技能来源
+
+```typescript
+// 1️⃣ 目录模式 — 传统 SKILL.md + scripts/ (需要 FilesystemBackend)
+createDeepAgent({
+  model: 'openai:gpt-4o',
+  backend: new FilesystemBackend({ rootDir: '.' }),
+  skills: ['./skills/', '~/.agents/skills/'],
+});
+
+// 2️⃣ SkillBundle JSON — 浏览器/端侧（无需文件系统）
+const arxivBundle: SkillBundle = {
+  metadata: {
+    name: 'arxiv-search',
+    description: 'Search arXiv for papers',
+    path: '/skills/arxiv-search/SKILL.md',
+  },
+  instructions: '# arXiv Search\n\nUse this skill to search...',
+  files: {
+    'arxiv_search.ts': '// inline script content...',
+  },
+};
+
+createDeepAgent({
+  model: 'chrome:gemini-nano',
+  backend: new StateBackend(),
+  skillBundles: [arxivBundle],
+});
+
+// 3️⃣ URL 安装 — 从远程获取技能文件
+import { installSkillFromUrl } from '@tdeepagents/middleware';
+
+await installSkillFromUrl(
+  'https://raw.githubusercontent.com/langchain-ai/deepagentsjs/main/examples/skills/arxiv-search/',
+  ['SKILL.md', 'arxiv_search.ts'],
+  backend,
+);
+```
+
+### 端侧脚本执行
+
+Node.js 下，Agent 通过 `execute` 工具运行脚本：
+```bash
+npx tsx /skills/arxiv-search/arxiv_search.ts "deep learning" --max-papers 5
+```
+
+浏览器端没有 shell，**两种替代方案**：
+
+| 方案 | 适用场景 | 说明 |
+|------|---------|------|
+| **Fetch-based** | 脚本核心逻辑是 HTTP 调用 | Agent 直接用 `fetch` 调用 API (如 arxiv 的 `export.arxiv.org`) |
+| **JS eval (JS skills)** | 纯计算/数据处理脚本 | SkillBundle 中的 `.js` 内容通过安全沙箱执行 |
+
+实际上，arxiv-search 这类技能的脚本核心就是 `fetch()` 调用 — 在浏览器中**天然可用**。
+Agent 读取 SKILL.md 说明后，会自行理解并实现逻辑（而非执行脚本）。
+
+### 技能导出 (Node → Browser)
+
+```typescript
+import { createSkillBundle } from '@tdeepagents/middleware';
+
+// 从 FilesystemBackend 导出为 SkillBundle JSON
+const bundle = await createSkillBundle('/skills/arxiv-search/', fsBackend);
+const json = JSON.stringify(bundle);
+// 存入 IndexedDB 或分发为 URL
+```
+

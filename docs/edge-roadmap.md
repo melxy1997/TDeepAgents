@@ -29,13 +29,17 @@
 └────────────────────────────────────────────┘
 ```
 
-## Phase 1: 浏览器基础 ⏳
+## Phase 1: 浏览器基础 ✅
 
 | 特性 | 实现方式 | 状态 |
 |------|---------|------|
 | browser 入口 | `@tdeepagents/backends/browser` 排除 node:fs | ✅ 已完成 |
 | 适配器注册表 | `registerAdapter()` 可扩展 | ✅ 已完成 |
 | zodToJsonSchema 共享 | 统一转换函数 | ✅ 已完成 |
+| Agent Skills 规范兼容 | 完整 frontmatter + resource 发现 | ✅ 已完成 |
+| SkillBundle (端侧技能) | JSON 格式打包 SKILL.md + 脚本 | ✅ 已完成 |
+| URL 安装技能 | `installSkillFromUrl()` | ✅ 已完成 |
+| 子 Agent 技能继承 | GP 继承 / custom 覆盖 | ✅ 已完成 |
 
 ## Phase 2: Chrome Built-in AI 适配器
 
@@ -78,4 +82,5 @@
 | 隐私 | 数据上云 | **数据不出设备** |
 | Web 标准 | 无 | **WebMCP W3C 标准** |
 | 离线能力 | 无 | **完全离线可用** |
+| 技能分发 | 只支持文件系统 | **SkillBundle JSON + URL 安装** |
 | 包体积 | 重 (LangGraph 生态) | **轻量 (~60KB total)** |
