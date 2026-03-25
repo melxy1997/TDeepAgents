@@ -1,4 +1,5 @@
 import type { Message } from '@tdeepagents/schemas';
+import { zodToJsonSchema } from '@tdeepagents/schemas';
 import type { ChatChunk, ChatParams, ChatResponse, LLMAdapter, ToolDefinition } from './types.js';
 
 /**
@@ -163,7 +164,7 @@ export class OpenAIAdapter implements LLMAdapter {
       function: {
         name: tool.name,
         description: tool.description,
-        parameters: this.zodToJsonSchema(tool.parameters),
+        parameters: zodToJsonSchema(tool.parameters),
       },
     }));
   }
@@ -185,53 +186,4 @@ export class OpenAIAdapter implements LLMAdapter {
     return result;
   }
 
-  /**
-   * Minimal Zod-to-JSON-Schema converter. Handles common Zod types.
-   * For production use, consider `zod-to-json-schema` package.
-   */
-  private zodToJsonSchema(schema: any): any {
-    if (!schema || !schema._def) {
-      return { type: 'object', properties: {} };
-    }
-
-    const def = schema._def;
-
-    switch (def.typeName) {
-      case 'ZodObject': {
-        const properties: Record<string, any> = {};
-        const required: string[] = [];
-        const shape = schema.shape;
-        for (const [key, value] of Object.entries(shape)) {
-          properties[key] = this.zodToJsonSchema(value);
-          // Check if field is required (not optional)
-          if ((value as any)?._def?.typeName !== 'ZodOptional') {
-            required.push(key);
-          }
-        }
-        return {
-          type: 'object',
-          properties,
-          ...(required.length ? { required } : {}),
-        };
-      }
-      case 'ZodString':
-        return { type: 'string', ...(def.description ? { description: def.description } : {}) };
-      case 'ZodNumber':
-        return { type: 'number', ...(def.description ? { description: def.description } : {}) };
-      case 'ZodBoolean':
-        return { type: 'boolean', ...(def.description ? { description: def.description } : {}) };
-      case 'ZodArray':
-        return { type: 'array', items: this.zodToJsonSchema(def.type) };
-      case 'ZodEnum':
-        return { type: 'string', enum: def.values };
-      case 'ZodOptional':
-        return this.zodToJsonSchema(def.innerType);
-      case 'ZodDefault':
-        return { ...this.zodToJsonSchema(def.innerType), default: def.defaultValue() };
-      case 'ZodRecord':
-        return { type: 'object', additionalProperties: this.zodToJsonSchema(def.valueType) };
-      default:
-        return { type: 'string' };
-    }
-  }
 }

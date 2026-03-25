@@ -14,4 +14,6 @@ export type { Message, StepEvent, SubAgentDef, TodoItem } from '@tdeepagents/sch
 
 // Re-export backends and adapter factory for ease of use
 export { StateBackend, FilesystemBackend, CompositeBackend } from '@tdeepagents/backends';
-export { initAdapter, OpenAIAdapter, AnthropicAdapter } from '@tdeepagents/adapters';
+export { initAdapter, registerAdapter, getRegisteredAdapters, OpenAIAdapter, AnthropicAdapter } from '@tdeepagents/adapters';
+export type { AdapterFactory } from '@tdeepagents/adapters';
+export { zodToJsonSchema } from '@tdeepagents/schemas';

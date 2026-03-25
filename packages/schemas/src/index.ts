@@ -50,3 +50,5 @@ export {
   SkillMetadataSchema,
   type SkillMetadata,
 } from './skill.js';
+
+export { zodToJsonSchema } from './zod-to-json-schema.js';
