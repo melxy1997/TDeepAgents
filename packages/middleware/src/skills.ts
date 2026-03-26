@@ -227,6 +227,12 @@ export class SkillsMiddleware implements Middleware {
     const metadata: Record<string, string> = {};
     let inMetadata = false;
 
+    // WebSkills extension fields
+    let webSkill: boolean | undefined;
+    let mcpServer: string | undefined;
+    let route: string | undefined;
+    let tools: string[] | undefined;
+
     for (const line of frontmatter) {
       if (line.startsWith('  ') && inMetadata) {
         const kvMatch = line.match(/^\s+(\w[\w-]*):\s*"?(.+?)"?\s*$/);
@@ -253,6 +259,25 @@ export class SkillsMiddleware implements Middleware {
         continue;
       }
 
+      // ─── WebSkills extension fields ──────────────────────────────
+      const webSkillMatch = line.match(/^web-skill:\s*(.+)/);
+      if (webSkillMatch) {
+        webSkill = webSkillMatch[1].trim().toLowerCase() === 'true';
+        continue;
+      }
+
+      const mcpServerMatch = line.match(/^mcp-server:\s*(.+)/);
+      if (mcpServerMatch) { mcpServer = mcpServerMatch[1].trim(); continue; }
+
+      const routeMatch = line.match(/^route:\s*(.+)/);
+      if (routeMatch) { route = routeMatch[1].trim(); continue; }
+
+      const skillToolsMatch = line.match(/^tools:\s*(.+)/);
+      if (skillToolsMatch) {
+        tools = skillToolsMatch[1].split(/[,\s]+/).filter(Boolean);
+        continue;
+      }
+
       if (line.match(/^metadata:\s*$/)) { inMetadata = true; }
     }
 
@@ -266,6 +291,10 @@ export class SkillsMiddleware implements Middleware {
       compatibility,
       allowedTools,
       metadata: Object.keys(metadata).length ? metadata : undefined,
+      webSkill,
+      mcpServer,
+      route,
+      tools,
     };
   }
 }

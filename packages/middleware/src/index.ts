@@ -11,3 +11,4 @@ export { HumanInTheLoopMiddleware, type HITLConfig, type HITLCallback, type HITL
 export { SkillsMiddleware, installSkillFromUrl, createSkillBundle } from './skills.js';
 export { MemoryMiddleware } from './memory.js';
 export { PatchToolCallsMiddleware } from './patch-tool-calls.js';
+export { McpClientMiddleware, type McpClientConfig, type McpServerConfig } from './mcp-client.js';

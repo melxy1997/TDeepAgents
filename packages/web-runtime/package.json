@@ -1,7 +1,8 @@
 {
-  "name": "@tdeepagents/middleware",
+  "name": "@tdeepagents/web-runtime",
   "version": "0.2.0",
   "type": "module",
+  "description": "Browser-side WebSkills runtime — register JS functions as AI-callable MCP tools",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,13 +19,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@tdeepagents/schemas": "workspace:*",
-    "@tdeepagents/adapters": "workspace:*",
-    "@tdeepagents/backends": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.12.0",
+    "@tdeepagents/schemas": "workspace:*",
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "jsdom": "^29.0.1",
     "tsup": "^8.3.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"

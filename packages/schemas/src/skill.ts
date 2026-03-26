@@ -8,6 +8,7 @@ import { z } from 'zod';
  * - name (required): skill identifier, lowercase a-z and hyphens
  * - description (required): what the skill does and when to use it
  * - license, compatibility, metadata, allowed-tools (optional)
+ * - web-skill, mcp-server, route, tools (optional, WebSkills extension)
  */
 export const SkillMetadataSchema = z.object({
   /** Unique skill name (1-64 chars, lowercase a-z and hyphens) */
@@ -33,6 +34,16 @@ export const SkillMetadataSchema = z.object({
     /** Asset files: assets/* */
     assets: z.array(z.string()).optional(),
   }).optional(),
+
+  // ─── WebSkills extension fields ────────────────────────────────────
+  /** Whether this skill is a WebSkill (browser-side MCP tool) */
+  webSkill: z.boolean().optional(),
+  /** Associated MCP server name (for skill↔MCP bridging) */
+  mcpServer: z.string().optional(),
+  /** Associated frontend route (for SPA page-routing) */
+  route: z.string().optional(),
+  /** MCP tool names this skill uses or provides */
+  tools: z.array(z.string()).optional(),
 });
 export type SkillMetadata = z.infer<typeof SkillMetadataSchema>;
 
@@ -52,3 +63,27 @@ export const SkillBundleSchema = z.object({
   files: z.record(z.string()).optional(),
 });
 export type SkillBundle = z.infer<typeof SkillBundleSchema>;
+
+// ─── WebSkill Definition ─────────────────────────────────────────────
+
+/**
+ * WebSkillDefinition — describes a programmatically registered browser-side
+ * tool for the WebSkillRuntime.
+ *
+ * This is the runtime representation used by `WebSkillRuntime.registerSkill()`.
+ * Unlike SKILL.md (which is instruction-based), this is function-based:
+ * the handler is a JS function, and the inputSchema is a JSON Schema object.
+ */
+export const WebSkillDefinitionSchema = z.object({
+  /** Tool name (must be unique within a WebSkillRuntime) */
+  name: z.string(),
+  /** Human-readable description (shown to LLM for tool selection) */
+  description: z.string(),
+  /** JSON Schema describing the tool's input parameters */
+  inputSchema: z.record(z.unknown()),
+  /** Target route for SPA page-routing (optional) */
+  route: z.string().optional(),
+  /** Timeout for page-routed tool calls in ms (default: 30000) */
+  timeout: z.number().optional(),
+});
+export type WebSkillDefinition = z.infer<typeof WebSkillDefinitionSchema>;

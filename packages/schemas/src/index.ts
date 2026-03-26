@@ -51,6 +51,8 @@ export {
   type SkillMetadata,
   SkillBundleSchema,
   type SkillBundle,
+  WebSkillDefinitionSchema,
+  type WebSkillDefinition,
 } from './skill.js';
 
 export { zodToJsonSchema } from './zod-to-json-schema.js';
